@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat en Tiempo Real</title>
+  <style>
+    body { font-family: Arial, sans-serif; }
+    #chat { list-style-type: none; padding: 0; }
+    #chat li { padding: 8px; margin-bottom: 10px; background-color: #f1f1f1; border-radius: 5px; }
+  </style>
+</head>
+<body>
+
+  <h2>Chat en Tiempo Real</h2>
+
+  <div>
+    <input id="user" type="text" placeholder="Tu nombre" />
+    <input id="message" type="text" placeholder="Escribe un mensaje..." />
+    <button onclick="sendMessage()">Enviar</button>
+  </div>
+
+  <ul id="chat"></ul>
+
+  <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+  <script>
+    // Conexión al backend usando Socket.IO
+    const socket = io('http://localhost:3000');
+
+    // Envía un mensaje al backend
+    function sendMessage() {
+      const user = document.getElementById('user').value;
+      const message = document.getElementById('message').value;
+
+      if (user && message) {
+        socket.emit('sendMessage', { user, text: message });
+        document.getElementById('message').value = ''; // Limpia el input
+      }
+    }
+
+    // Escucha los mensajes entrantes del backend
+    socket.on('receiveMessage', (message) => {
+      const chat = document.getElementById('chat');
+      const newMessage = document.createElement('li');
+      newMessage.innerText = `${message.user}: ${message.text}`;
+      chat.appendChild(newMessage);
+    });
+
+    // Obtener el historial de mensajes
+    socket.emit('getMessages');
+
+    socket.on('messageHistory', (messages) => {
+      const chat = document.getElementById('chat');
+      chat.innerHTML = ''; // Limpia la lista
+      messages.forEach(message => {
+        const newMessage = document.createElement('li');
+        newMessage.innerText = `${message.user}: ${message.text}`;
+        chat.appendChild(newMessage);
+      });
+    });
+  </script>
+  
+</body>
+</html>
